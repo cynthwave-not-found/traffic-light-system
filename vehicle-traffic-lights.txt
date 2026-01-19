@@ -1,0 +1,104 @@
+/*
+  Traffic lights v1
+
+  (1) Guide for setup: 
+  for arduino wiring reference, refer to these two images: 
+    https://bit.ly/4b7eZn0
+    -> for the wiring numbers look below variable declarations;
+    -> the colours are assigned to the pin numbers
+    https://bit.ly/3ZoMsSE
+    -> add a button to activate pedestrian mode
+  Optional: use 9600 baud for serial monitor
+
+  (2) How the system works: 
+  like a typical traffic light system; 
+  green goes first, which allows cars to cross through the road
+  however, if the button is clicked, it will directly switch to
+  'pedestrian mode', where the traffic lights turn red for 
+  pedestrians to walk through. 
+  after that, it will revert back to 'vehicle mode', where the light
+  turns green again, and the cycle continues on and on. 
+
+  (3) Usage of button: 
+  -> please hold the buttonclick for a minimum of 0.5 seconds, for 
+    a more reliable trigger. 
+
+  created 19/1/2026
+  by cynthwave-not-found <https://github.com/cynthwave-not-found>
+*/
+
+//variable declarations
+const int red = 3; 
+const int yellow = 5;
+const int green = 7; 
+const int buttonPin = 2; 
+bool pedestrian = false;
+
+void reset(){
+  digitalWrite(red, LOW); 
+  digitalWrite(yellow, LOW); 
+  digitalWrite(green, LOW); 
+}
+
+void setup() {
+  pinMode(red, OUTPUT); 
+  pinMode(yellow, OUTPUT); 
+  pinMode(green, OUTPUT);
+  pinMode(buttonPin, INPUT); 
+  Serial.begin(9600);
+}
+
+void loop() {
+  digitalWrite(yellow, LOW); 
+  digitalWrite(red, LOW); 
+  pedestrian = false; 
+  
+  for (int i=0;i<30;i++) { // 30 x 500ms = 15 seconds
+    digitalWrite(green, HIGH); 
+    if (digitalRead(buttonPin) == HIGH && pedestrian == false) {
+      Serial.println("Pedestrian mode"); 
+      pedestrian = true; 
+      digitalWrite(green, LOW); 
+      digitalWrite(yellow, HIGH); 
+      digitalWrite(red, LOW); 
+      delay(2500); 
+      digitalWrite(yellow, LOW); 
+      digitalWrite(red, HIGH); 
+      digitalWrite(green, LOW); 
+
+      Serial.print("["); 
+      for (int i=0;i<10;i++) { // 1000ms x 10 = 10 seconds to cross
+        Serial.print("-"); 
+        delay(1000); 
+      }
+      Serial.println("]; duration: 10s; cooldown until next green light"); 
+      
+      for (int i=0;i<5;i++) { 
+        digitalWrite(red, i%2); 
+        delay(400); 
+      }
+      Serial.println("Vehicle mode"); 
+      
+    }
+    delay(500); 
+  }
+  pedestrian = false; 
+
+  // transition from green to yellow
+  digitalWrite(green, LOW); 
+  digitalWrite(yellow, HIGH); 
+  digitalWrite(red, LOW); 
+  delay(3000); 
+
+  // red = cars stop
+  digitalWrite(yellow, LOW); 
+  digitalWrite(red, HIGH); 
+  digitalWrite(green, LOW); 
+  delay(10000); 
+
+  // flash before green
+  for (int i=0;i<3;i++) {
+    digitalWrite(red, i%2);
+    delay(300); 
+  }
+}
